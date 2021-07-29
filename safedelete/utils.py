@@ -2,6 +2,7 @@ import itertools
 
 from django.contrib.admin.utils import NestedObjects
 from django.db import router
+from django.db.models.deletion import ProtectedError
 
 
 def related_objects(obj):
@@ -16,6 +17,9 @@ def related_objects(obj):
         elif obj != elem:
             return (elem,)
         return ()
+
+    if collector.protected:
+        raise ProtectedError('protected objects', collector.protected)
 
     return flatten(collector.nested())
 

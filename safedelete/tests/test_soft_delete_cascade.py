@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from safedelete import SOFT_DELETE_CASCADE, SOFT_DELETE
 from safedelete.models import SafeDeleteModel
@@ -20,6 +21,11 @@ class Press(SafeDeleteModel):
 class PressNormalModel(models.Model):
     name = models.CharField(max_length=200)
     article = models.ForeignKey(Article, on_delete=models.CASCADE, null=True)
+
+
+class PressRelatedModel(SafeDeleteModel):
+    name = models.CharField(max_length=200)
+    article = models.ForeignKey(Article, on_delete=models.PROTECT, null=True)
 
 
 class CustomAbstractModel(SafeDeleteModel):
@@ -121,6 +127,10 @@ class SimpleTest(TestCase):
         pre_softdelete.disconnect(pre_softdelete_article, Article)
 
         self.assertEqual(PressNormalModel.objects.first().article, self.articles[0])
+
+    def test_soft_delete_cascade_protect(self):
+        PressRelatedModel.objects.create(name='test', article=self.articles[0])
+        self.assertRaises(ProtectedError, self.articles[0].delete)
 
     def test_soft_delete_cascade_with_abstract_model(self):
         ArticleView.objects.create(article=self.articles[2])
