@@ -19,7 +19,9 @@ def related_objects(obj):
         return ()
 
     if collector.protected:
-        raise ProtectedError('protected objects', collector.protected)
+        for obj in collector.protected:
+            if not getattr(obj, 'deleted', None):
+                raise ProtectedError('protected objects', collector.protected)
 
     return flatten(collector.nested())
 
